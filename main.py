@@ -16,12 +16,11 @@ sentences = [
 ]
 
 def calculate_wpm(input_text, elapsed_sec):
-    # 한글자당 한 타자로 간주하고, 분 단위로 환산
-    words_typed = len(input_text)
+    chars = len(input_text)
     minutes = elapsed_sec / 60
     if minutes == 0:
         return 0
-    return words_typed / minutes
+    return chars / minutes
 
 def calculate_accuracy(target, input_text):
     correct_chars = 0
@@ -30,25 +29,29 @@ def calculate_accuracy(target, input_text):
             correct_chars += 1
     if len(input_text) == 0:
         return 0
-    return correct_chars / len(input_text) * 100
+    return (correct_chars / len(input_text)) * 100
 
 def main():
     st.title("한국어 타자 연습기")
 
     st.write("""
     ## 문제 정의
-    타자 속도가 비교적 느린 청소년층이 효율적이지 못하게 문서 작성, 과제, 보고서 등을 작성하기 때문에 문제가 됩니다.
+    타자 속도가 느린 청소년이 효율적인 문서 작성에 어려움을 겪습니다.
 
     ## 기능 소개
-    - 한국어 단어 타자 연습
-    - 한국어 문장 타자 연습
+    - 한국어 단어/문장 타자 연습
     - 타자 속도(WPM) 및 정확도 계산
-    - 연습 통계 저장 및 표시
+    - 연습 기록 저장 및 확인
     """)
 
     mode = st.radio("연습 모드 선택:", ("단어 연습", "문장 연습"))
 
-    if st.button("연습 시작") or "target_text" not in st.session_state:
+    if "completed" not in st.session_state:
+        st.session_state["completed"] = False
+
+    start_clicked = st.button("연습 시작")
+
+    if start_clicked or "target_text" not in st.session_state:
         if mode == "단어 연습":
             target = random.choice(words)
         else:
@@ -64,7 +67,6 @@ def main():
         st.markdown(f"### 다음 내용을 타이핑하세요:\n\n> {target_text}")
 
         input_text = st.text_input("입력:", value=st.session_state.get("input_text", ""), key="typing_input")
-
         st.session_state["input_text"] = input_text
 
         if not st.session_state["completed"] and input_text == target_text:
@@ -76,15 +78,15 @@ def main():
             st.write(f"- 타자 속도(WPM): {wpm:.2f}")
             st.write(f"- 정확도: {accuracy:.2f}%")
 
-            # 통계 저장 (세션 상태에 리스트로 저장)
+            # 연습 기록 저장
             if "records" not in st.session_state:
                 st.session_state["records"] = []
             st.session_state["records"].append({
+                "mode": mode,
                 "text": target_text,
                 "time_sec": elapsed,
                 "wpm": wpm,
-                "accuracy": accuracy,
-                "mode": mode
+                "accuracy": accuracy
             })
 
             st.session_state["completed"] = True
@@ -96,7 +98,6 @@ def main():
                 del st.session_state["input_text"]
                 st.session_state["completed"] = False
 
-    # 통계 표시
     if "records" in st.session_state and st.session_state["records"]:
         st.markdown("---")
         st.subheader("연습 기록")
