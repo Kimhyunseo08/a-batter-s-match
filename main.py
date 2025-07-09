@@ -38,7 +38,6 @@ def calculate_accuracy(target, input_text):
         return 0
     return (correct_chars / len(input_text)) * 100
 
-# 다음 문제로 이동하는 함수
 def next_question():
     st.session_state["quiz_index"] += 1
     st.session_state["completed"] = False
@@ -68,46 +67,49 @@ def main():
         if mode == "단어 연습":
             st.session_state["quiz_list"] = random.sample(words, k=NUM_QUESTIONS)
         else:
-            if len(sentences) < NUM_QUESTIONS:
-                st.session_state["quiz_list"] = sentences.copy()
-            else:
-                st.session_state["quiz_list"] = random.sample(sentences, k=NUM_QUESTIONS)
+            st.session_state["quiz_list"] = random.sample(sentences, k=NUM_QUESTIONS)
         st.session_state["quiz_index"] = 0
         st.session_state["completed"] = False
         st.session_state["input_text"] = ""
         st.session_state["start_time"] = time.time()
+        st.session_state["records"] = []
 
     if st.session_state["quiz_index"] < len(st.session_state["quiz_list"]):
         current_text = st.session_state["quiz_list"][st.session_state["quiz_index"]]
         st.markdown(f"### 문제 {st.session_state['quiz_index']+1} / {len(st.session_state['quiz_list'])}")
         st.markdown(f"> {current_text}")
 
-        # 문제 번호를 기반으로 입력창 key 지정 → 문제 바뀔 때 입력창 초기화됨
         input_key = f"typing_input_{st.session_state['quiz_index']}"
         input_text = st.text_input("입력:", value="", key=input_key)
         st.session_state["input_text"] = input_text
 
-        if not st.session_state.get("completed", False) and input_text == current_text:
+        if not st.session_state.get("completed", False) and input_text != "":
             elapsed = time.time() - st.session_state["start_time"]
             wpm = calculate_wpm(input_text, elapsed)
             accuracy = calculate_accuracy(current_text, input_text)
+            is_correct = input_text == current_text
 
-            st.success(f"정확히 입력하셨습니다! 🎉 소요 시간: {elapsed:.2f}초")
+            if is_correct:
+                st.success(f"정확히 입력하셨습니다! 🎉 소요 시간: {elapsed:.2f}초")
+            else:
+                st.warning("틀렸지만 결과는 저장됩니다.")
+                st.write(f"- 입력한 문장: `{input_text}`")
+
             st.write(f"- 타자 속도(WPM): {wpm:.2f}")
             st.write(f"- 정확도: {accuracy:.2f}%")
 
-            if "records" not in st.session_state:
-                st.session_state["records"] = []
             st.session_state["records"].append({
                 "mode": mode,
                 "text": current_text,
+                "input": input_text,
                 "time_sec": elapsed,
                 "wpm": wpm,
-                "accuracy": accuracy
+                "accuracy": accuracy,
+                "result": "정답" if is_correct else "오답"
             })
 
             st.session_state["completed"] = True
-            st.session_state["input_text"] = ""  # 결과 출력 시 입력칸 비우기
+            st.session_state["input_text"] = ""
 
         if st.session_state.get("completed", False):
             st.button("다음 문제", on_click=next_question)
@@ -119,12 +121,20 @@ def main():
             st.session_state["quiz_index"] = 0
             st.session_state["completed"] = False
             st.session_state["input_text"] = ""
+            st.session_state["records"] = []
 
     if "records" in st.session_state and st.session_state["records"]:
         st.markdown("---")
         st.subheader("연습 기록")
         for i, rec in enumerate(st.session_state["records"], 1):
-            st.write(f"{i}. [{rec['mode']}] \"{rec['text']}\" — 시간: {rec['time_sec']:.2f}s, WPM: {rec['wpm']:.2f}, 정확도: {rec['accuracy']:.2f}%")
+            st.write(f"""
+            {i}. [{rec['mode']}] {rec['result']}  
+            - 문제: {rec['text']}  
+            - 입력: {rec['input']}  
+            - 시간: {rec['time_sec']:.2f}s  
+            - WPM: {rec['wpm']:.2f}  
+            - 정확도: {rec['accuracy']:.2f}%
+            """)
 
 if __name__ == "__main__":
     main()
