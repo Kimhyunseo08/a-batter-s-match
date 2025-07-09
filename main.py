@@ -53,11 +53,9 @@ def main():
         st.session_state["quiz_index"] = 0
 
     if st.button("연습 시작") or len(st.session_state["quiz_list"]) == 0:
-        # 문제 5개 랜덤 추출
         if mode == "단어 연습":
             st.session_state["quiz_list"] = random.sample(words, k=NUM_QUESTIONS)
         else:
-            # 문장 리스트가 5개보다 작으면 전체 사용
             if len(sentences) < NUM_QUESTIONS:
                 st.session_state["quiz_list"] = sentences.copy()
             else:
@@ -67,7 +65,6 @@ def main():
         st.session_state["input_text"] = ""
         st.session_state["start_time"] = time.time()
 
-    # 현재 문제 출력 및 입력 받기
     if st.session_state["quiz_index"] < len(st.session_state["quiz_list"]):
         current_text = st.session_state["quiz_list"][st.session_state["quiz_index"]]
         st.markdown(f"### 문제 {st.session_state['quiz_index']+1} / {len(st.session_state['quiz_list'])}")
@@ -85,7 +82,6 @@ def main():
             st.write(f"- 타자 속도(WPM): {wpm:.2f}")
             st.write(f"- 정확도: {accuracy:.2f}%")
 
-            # 기록 저장
             if "records" not in st.session_state:
                 st.session_state["records"] = []
             st.session_state["records"].append({
@@ -97,6 +93,9 @@ def main():
             })
 
             st.session_state["completed"] = True
+
+            # 입력창 자동 초기화 (결과와 동시에 입력 칸 비우기)
+            st.session_state["input_text"] = ""
 
         if st.session_state.get("completed", False):
             if st.button("다음 문제"):
@@ -112,7 +111,6 @@ def main():
             st.session_state["completed"] = False
             st.session_state["input_text"] = ""
 
-    # 기록 표시
     if "records" in st.session_state and st.session_state["records"]:
         st.markdown("---")
         st.subheader("연습 기록")
