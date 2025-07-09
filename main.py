@@ -20,7 +20,7 @@ sentences = [
     "재능은 꽃피우는것 센스는 갈고 닦는것"
 ]
 
-NUM_QUESTIONS = 5
+NUM_QUESTIONS = 10
 
 def calculate_wpm(input_text, elapsed_sec):
     chars = len(input_text)
