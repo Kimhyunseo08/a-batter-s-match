@@ -64,10 +64,7 @@ def main():
         st.session_state["quiz_index"] = 0
 
     if st.button("연습 시작") or len(st.session_state["quiz_list"]) == 0:
-        if mode == "단어 연습":
-            st.session_state["quiz_list"] = random.sample(words, k=NUM_QUESTIONS)
-        else:
-            st.session_state["quiz_list"] = random.sample(sentences, k=NUM_QUESTIONS)
+        st.session_state["quiz_list"] = random.sample(words if mode == "단어 연습" else sentences, k=NUM_QUESTIONS)
         st.session_state["quiz_index"] = 0
         st.session_state["completed"] = False
         st.session_state["input_text"] = ""
@@ -83,7 +80,8 @@ def main():
         input_text = st.text_input("입력:", value="", key=input_key)
         st.session_state["input_text"] = input_text
 
-        if not st.session_state.get("completed", False) and input_text != "":
+        # 처리되지 않은 상태에서 입력 완료되면 자동 처리
+        if not st.session_state.get("completed", False) and input_text.strip() != "":
             elapsed = time.time() - st.session_state["start_time"]
             wpm = calculate_wpm(input_text, elapsed)
             accuracy = calculate_accuracy(current_text, input_text)
@@ -109,10 +107,10 @@ def main():
             })
 
             st.session_state["completed"] = True
-            st.session_state["input_text"] = ""
 
-        if st.session_state.get("completed", False):
-            st.button("다음 문제", on_click=next_question)
+            # 약간 기다렸다가 다음 문제 자동 이동
+            time.sleep(1)
+            next_question()
 
     else:
         st.success("5문제 모두 완료하셨습니다! 잘 하셨어요 🎉")
