@@ -38,7 +38,7 @@ def calculate_accuracy(target, input_text):
         return 0
     return (correct_chars / len(input_text)) * 100
 
-# 다음 문제로 넘어가는 함수
+# 다음 문제로 이동하는 함수
 def next_question():
     st.session_state["quiz_index"] += 1
     st.session_state["completed"] = False
@@ -82,7 +82,9 @@ def main():
         st.markdown(f"### 문제 {st.session_state['quiz_index']+1} / {len(st.session_state['quiz_list'])}")
         st.markdown(f"> {current_text}")
 
-        input_text = st.text_input("입력:", value=st.session_state.get("input_text", ""), key="typing_input")
+        # 문제 번호를 기반으로 입력창 key 지정 → 문제 바뀔 때 입력창 초기화됨
+        input_key = f"typing_input_{st.session_state['quiz_index']}"
+        input_text = st.text_input("입력:", value="", key=input_key)
         st.session_state["input_text"] = input_text
 
         if not st.session_state.get("completed", False) and input_text == current_text:
@@ -105,7 +107,7 @@ def main():
             })
 
             st.session_state["completed"] = True
-            st.session_state["input_text"] = ""  # 결과 출력과 동시에 입력칸 비우기
+            st.session_state["input_text"] = ""  # 결과 출력 시 입력칸 비우기
 
         if st.session_state.get("completed", False):
             st.button("다음 문제", on_click=next_question)
